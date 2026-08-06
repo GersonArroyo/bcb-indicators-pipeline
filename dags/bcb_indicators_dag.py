@@ -4,7 +4,8 @@ from airflow.providers.standard.operators.bash import BashOperator
 from airflow.providers.standard.operators.python import Path, PythonOperator
 import json
 import pandas as pd
-import requests
+# import requests
+from scripts.fetch_bcb import _json_downloader
 
 
 def _json_to_csv(input_path,output_path):
@@ -16,15 +17,6 @@ def _json_to_csv(input_path,output_path):
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     
     dataframe.to_csv(output_path, index=False)
-
-def _json_downloader(url, output_path):
-    url = url
-    response = requests.get(url)
-    response.raise_for_status()
-    data = response.json()
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, 'w') as f:
-        json.dump(data, f)
 
 with DAG(
     dag_id="projeto-bcb",
@@ -40,7 +32,7 @@ with DAG(
             "output_path":"/tmp/data/raw/bcb/{{ ds }}.json"
         }
     )
-        
+    
     transform_to_csv = PythonOperator(
         task_id="transform_to_csv",
         python_callable=_json_to_csv,
@@ -51,3 +43,4 @@ with DAG(
     )
     
     fetch_bcb_series >> transform_to_csv
+    
