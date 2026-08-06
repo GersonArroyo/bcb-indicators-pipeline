@@ -1,22 +1,9 @@
 from airflow.sdk import DAG
 from datetime import datetime
-from airflow.providers.standard.operators.bash import BashOperator
-from airflow.providers.standard.operators.python import Path, PythonOperator
-import json
-import pandas as pd
-# import requests
+from airflow.providers.standard.operators.python import PythonOperator
 from scripts.fetch_bcb import _json_downloader
+from scripts.transform_bcb import _json_to_csv
 
-
-def _json_to_csv(input_path,output_path):
-    with open(input_path) as f:
-        data = json.load(f)
-    
-    dataframe = pd.DataFrame(data)
-    
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    
-    dataframe.to_csv(output_path, index=False)
 
 with DAG(
     dag_id="projeto-bcb",
@@ -32,7 +19,7 @@ with DAG(
             "output_path":"/tmp/data/raw/bcb/{{ ds }}.json"
         }
     )
-    
+
     transform_to_csv = PythonOperator(
         task_id="transform_to_csv",
         python_callable=_json_to_csv,
