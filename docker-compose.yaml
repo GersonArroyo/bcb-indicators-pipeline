@@ -83,6 +83,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ./scripts:/opt/airflow/scripts
+    - ./config_bcb:/opt/airflow/config_bcb
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -102,6 +103,23 @@ services:
       - postgres-db-volume:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  postgres_bcb:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: bcb
+      POSTGRES_PASSWORD: bcb
+      POSTGRES_DB: bcb
+    ports:
+      - "5443:5432"
+    volumes:
+      - postgres-bcb-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "bcb"]
       interval: 10s
       retries: 5
       start_period: 5s
@@ -337,3 +355,4 @@ services:
 
 volumes:
   postgres-db-volume:
+  postgres-bcb-db-volume:

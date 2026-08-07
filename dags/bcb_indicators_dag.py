@@ -1,8 +1,8 @@
 from airflow.sdk import DAG
 from datetime import datetime
 from airflow.providers.standard.operators.python import PythonOperator
-from scripts.fetch_bcb import _json_downloader
-from scripts.transform_bcb import _json_to_csv
+from scripts.fetch_bcb import json_downloader
+from scripts.transform_bcb import json_to_csv
 
 
 with DAG(
@@ -13,21 +13,25 @@ with DAG(
 ):
     fetch_bcb_series = PythonOperator(
         task_id="fetch_bcb_series",
-        python_callable=_json_downloader,
+        python_callable=json_downloader,
         op_kwargs={
-            "url":"https://api.bcb.gov.br/dados/serie/bcdata.sgs.27790/dados?formato=json",
-            "output_path":"/tmp/data/raw/bcb/{{ ds }}.json"
+            "series_path":"/opt/airflow/config_bcb/series.json",
+            "url":"https://api.bcb.gov.br/dados/serie/bcdata.sgs.",
+            "output_path":"/tmp/data/raw/bcb",
+            "end_date":"{{ ds }}"
         }
     )
 
     transform_to_csv = PythonOperator(
-        task_id="transform_to_csv",
-        python_callable=_json_to_csv,
-        op_kwargs={
-            "input_path":"/tmp/data/raw/bcb/{{ ds }}.json",
-            "output_path":"/tmp/data/processed/bcb/{{ ds }}.csv"
-        }
-    )
+    task_id="transform_to_csv",
+    python_callable=json_to_csv,
+    op_kwargs={
+        "series_path": "/opt/airflow/config_bcb/series.json",
+        "input_base_path": "/tmp/data/raw/bcb",
+        "output_base_path": "/tmp/data/processed/bcb",
+        "partition_date": "{{ ds }}"
+    }
+)
     
     fetch_bcb_series >> transform_to_csv
     

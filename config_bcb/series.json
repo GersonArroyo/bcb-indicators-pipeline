@@ -1,0 +1,26 @@
+[
+  {
+    "series_code": 432,
+    "series_name": "Meta Selic definida pelo Copom",
+    "frequency": "daily",
+    "unit": "% a.a."
+  },
+  {
+    "series_code": 11,
+    "series_name": "Taxa Selic",
+    "frequency": "daily",
+    "unit": "% a.d."
+  },
+  {
+    "series_code": 1,
+    "series_name": "Dólar americano venda",
+    "frequency": "daily",
+    "unit": "BRL/USD"
+  },
+  {
+    "series_code": 433,
+    "series_name": "IPCA",
+    "frequency": "monthly",
+    "unit": "% mensal"
+  }
+]
