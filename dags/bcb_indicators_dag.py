@@ -21,17 +21,17 @@ with DAG(
             "end_date":"{{ ds }}"
         }
     )
-
+    
     transform_to_csv = PythonOperator(
-    task_id="transform_to_csv",
-    python_callable=json_to_csv,
-    op_kwargs={
-        "series_path": "/opt/airflow/config_bcb/series.json",
-        "input_base_path": "/tmp/data/raw/bcb",
-        "output_base_path": "/tmp/data/processed/bcb",
-        "partition_date": "{{ ds }}"
-    }
-)
+        task_id="transform_to_csv",
+        python_callable=json_to_csv,
+        op_kwargs={
+            "series_path": "/opt/airflow/config_bcb/series.json",
+            "input_base_path": "/tmp/data/raw/bcb",
+            "output_base_path": "/tmp/data/processed/bcb",
+            "partition_date": "{{ ds }}"
+        }
+    )
     
     fetch_bcb_series >> transform_to_csv
     

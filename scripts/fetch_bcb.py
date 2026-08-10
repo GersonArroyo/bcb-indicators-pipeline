@@ -1,21 +1,23 @@
 from datetime import datetime, timedelta
-from urllib import response
 import requests
 import json
 from pathlib import Path
 
+
 def to_bcb_date(ds):
     return datetime.strptime(ds, "%Y-%m-%d").strftime("%d/%m/%Y")
 
+
 def get_start_date_by_frequency(end_date, frequency):
     end = datetime.strptime(end_date, "%Y-%m-%d")
-
+    
     if frequency == "monthly":
         start = end - timedelta(days=120)
     else:
         start = end - timedelta(days=10)
-
+        
     return start.strftime("%d/%m/%Y")
+
 
 def json_downloader(series_path, url, output_path, end_date):
     
