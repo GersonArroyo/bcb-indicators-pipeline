@@ -32,6 +32,16 @@ with DAG(
             "partition_date":"{{ ds }}"
         }
     )
+    
+    test_docker_operator = DockerOperator(
+        task_id="test_docker_operator",
+        image="bcb-pipeline:1.0",
+        command=['python', '-c', "print('container do pipeline executou')"],
+        docker_url="unix://var/run/docker.sock",
+        network_mode="bridge",
+        auto_remove="success",
+        mount_tmp_dir=False,
+    )
 
     fetch_bcb_series >> load_postgres
     

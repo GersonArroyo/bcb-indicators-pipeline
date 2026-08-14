@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 import json
 from pathlib import Path
+import psycopg
 from scripts.bcb_validators import (
     validate_file_exists, 
     validate_json_format, 
@@ -47,7 +48,6 @@ def build_normalized_records(series_path, input_path, partition_date):
 
 
 def save_records_to_postgres(normalized_data):
-    import psycopg
 
     conn = psycopg.connect(
             host="postgres_bcb",
@@ -80,5 +80,4 @@ def save_records_to_postgres(normalized_data):
 def load_bcb_to_postgres(series_path, input_path, partition_date):
     normalized_data = build_normalized_records(series_path, input_path, partition_date)
     save_records_to_postgres(normalized_data)
-    
     

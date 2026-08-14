@@ -43,6 +43,9 @@ indicator_value  decimal
 ingestion_date   data/hora de carga
 ```
 
+## Arquitetura
+O Airflow foi usado apenas como camada de orquestração. As etapas de extração e carga são executadas em containers isolados, tornando o pipeline mais próximo de um ambiente produtivo.
+
 ## Modelo do projeto
 ```BASH
 bcb-indicators-pipeline/

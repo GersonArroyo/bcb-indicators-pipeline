@@ -46,4 +46,3 @@ def validate_fields_values(data, required_fields):
                 raise ValueError(f"Campo obrigatório '{required_field}' contém apenas espaços em branco em uma das linhas do arquivo.")
             
 
-            
