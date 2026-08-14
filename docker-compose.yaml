@@ -124,6 +124,26 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+    networks:
+      - default
+      - pgadmin_network
+  
+  pgadmin:
+      image: dpage/pgadmin4
+      container_name: pgadmin_bcb
+      restart: always
+      environment:
+        PGADMIN_DEFAULT_EMAIL: admin@admin.com
+        PGADMIN_DEFAULT_PASSWORD: admin
+      volumes:
+        - ./pgadmin-data/servers.json:/pgadmin4/servers.json
+        - pgadmin_storage:/var/lib/pgadmin
+      ports:
+        - 9191:80
+      depends_on:
+        - postgres
+      networks:
+        - pgadmin_network
 
   redis:
     # Redis is limited to 7.2-bookworm due to licencing change
@@ -356,3 +376,7 @@ services:
 volumes:
   postgres-db-volume:
   postgres-bcb-db-volume:
+  pgadmin_storage:
+
+networks:
+  pgadmin_network:

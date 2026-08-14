@@ -30,6 +30,18 @@ As séries mensais são buscadas com uma janela maior de 120 dias.
 A tabela final usa `series_code` + `reference_date` como chave única para evitar registro duplicado.
 Essa janela móvel serve pra dá mais segurança contra atraso/correção de dados.
 
+## Tabela
+Schema: public
+Tabela: 
+Campos:
+```TEXT
+id               serie
+series_code      inteiro
+series_name      varchar
+reference_date   data
+indicator_value  decimal
+ingestion_date   data/hora de carga
+```
 
 ## Modelo do projeto
 ```BASH
