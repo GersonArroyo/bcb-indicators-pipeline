@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "bcb_indicators",
+      "Group": "Servers",
+      "Host": "postgres_bcb",
+      "Port": 5432,
+      "MaintenanceDB": "bcb",
+      "Username": "bcb",
+      "SSLMode": "prefer"
+    }
+  }
+}
