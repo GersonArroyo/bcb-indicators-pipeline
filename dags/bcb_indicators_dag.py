@@ -1,5 +1,5 @@
 from airflow.sdk import DAG
-from datetime import datetime
+from datetime import datetime, timedelta
 from airflow.providers.docker.operators.docker import DockerOperator
 
 
@@ -7,7 +7,11 @@ with DAG(
     dag_id="projeto-bcb",
     start_date=datetime(2026,1,1),
     schedule='0 7 * * *',
-    catchup=False
+    catchup=False,
+    default_args={
+        "retries":2,
+        "retry_delay":timedelta(minutes=5)
+    }
 ):
     fetch_bcb_series = DockerOperator(
         task_id="fetch_bcb_series",

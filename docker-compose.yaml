@@ -112,9 +112,9 @@ services:
   postgres_bcb:
     image: postgres:16
     environment:
-      POSTGRES_USER: bcb
-      POSTGRES_PASSWORD: bcb
-      POSTGRES_DB: bcb
+      POSTGRES_USER: ${BCB_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${BCB_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${BCB_POSTGRES_DB}
     ports:
       - "5443:5432"
     volumes:
