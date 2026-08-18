@@ -98,13 +98,24 @@ Essa regra evita duplicidade de registros quando a DAG é executada novamente pa
 
 A carga usa `ON CONFLICT DO UPDATE`, permitindo atualizar registros existentes sem duplicar linhas.
 
+## Pré-requisitos
+Antes de executar o projeto, é necessário ter instalado:
+- Docker
+- Docker Compose
+Este projeto foi pensado para rodar em ambiente containerizado. Não é necessário criar ambiente virtual Python local para executar a pipeline.
+
 ## Configuração do ambiente
 1. Crie um arquivo `.env` a partir do `.env.example`.
 2. Gere uma chave para o `FERNET_KEY`:
 ```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 3. Cole o valor gerado no arquivo `.env`.
+
+## Criação da tabela no PostgreSQL
+A tabela `bcb_indicators` é criada automaticamente na primeira inicialização do banco `postgres_bcb`.
+O script `sql/create_economic_indicators.sql` é montado no container PostgreSQL em:
+`/docker-entrypoint-initdb.d/01_create_economic_indicators.sql`
 
 ## Build da imagem do pipeline
 A imagem `bcb-pipeline` contém os scripts e dependências usados pelas tasks executadas via `DockerOperator`.
@@ -121,30 +132,19 @@ Após subir os containers, acesse o Airflow pela porta configurada no `docker-co
 
 O pgAdmin também estará disponível na porta configurada no `docker-compose.yaml`.
 
-## Criando a tabela no PostgreSQL
-Execute o script SQL de criação da tabela:
-```bash
-docker compose exec -T postgres_bcb psql -U bcb -d bcb < sql/create_economic_indicators.sql
-```
-
 ## Executando a DAG
-Acessar o Airflow: [Link_Airflow](http://localhost:8081)
-```Usuário
-airflow
-```
-```Senha
-airflow
-```
-No Airflow, execute manualmente a DAG:
-```text
-projeto-bcb
-```
-
-As principais tasks são:
-```text
-fetch_bcb_series
-load_postgres
-```
+1. Acessar o Airflow: 
+[Link_Airflow](http://localhost:8081)
+2. Faça login com as credenciais locais:
+usuário: `airflow`
+senha: `airflow`
+3. Na lista de DAGs, procure por: `projeto-bcb`
+4. Ative a DAG, se ela estiver pausada.
+5. Clique em Trigger DAG para executar manualmente.
+6. Acompanhe as tasks:
+`fetch_bcb_series`
+`load_postgres`
+As duas devem finalizar com status `Success`.
 
 A task `fetch_bcb_series` coleta os dados da API do Banco Central e salva os arquivos JSON brutos.
 
