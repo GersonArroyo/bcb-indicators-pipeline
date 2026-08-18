@@ -83,6 +83,8 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ./scripts:/opt/airflow/scripts
+    - ./config_bcb:/opt/airflow/config_bcb
+    - /var/run/docker.sock:/var/run/docker.sock
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -106,6 +108,44 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+
+  postgres_bcb:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${BCB_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${BCB_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${BCB_POSTGRES_DB}
+    ports:
+      - "5443:5432"
+    volumes:
+      - postgres-bcb-db-volume:/var/lib/postgresql/data
+      - ./sql/create_economic_indicators.sql:/docker-entrypoint-initdb.d/01_create_economic_indicators.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "bcb"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+    networks:
+      - default
+      - pgadmin_network
+  
+  pgadmin:
+      image: dpage/pgadmin4
+      container_name: pgadmin_bcb
+      restart: always
+      environment:
+        PGADMIN_DEFAULT_EMAIL: admin@admin.com
+        PGADMIN_DEFAULT_PASSWORD: admin
+      volumes:
+        - ./pgadmin-data/servers.json:/pgadmin4/servers.json
+        - pgadmin_storage:/var/lib/pgadmin
+      ports:
+        - 9191:80
+      depends_on:
+        - postgres
+      networks:
+        - pgadmin_network
 
   redis:
     # Redis is limited to 7.2-bookworm due to licencing change
@@ -184,6 +224,8 @@ services:
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
     restart: always
+    group_add:
+      - "984"
     depends_on:
       <<: *airflow-common-depends-on
       airflow-apiserver:
@@ -337,3 +379,8 @@ services:
 
 volumes:
   postgres-db-volume:
+  postgres-bcb-db-volume:
+  pgadmin_storage:
+
+networks:
+  pgadmin_network:
