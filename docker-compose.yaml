@@ -119,6 +119,7 @@ services:
       - "5443:5432"
     volumes:
       - postgres-bcb-db-volume:/var/lib/postgresql/data
+      - ./sql/create_economic_indicators.sql:/docker-entrypoint-initdb.d/01_create_economic_indicators.sql:ro
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "bcb"]
       interval: 10s

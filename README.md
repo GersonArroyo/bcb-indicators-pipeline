@@ -128,6 +128,13 @@ docker compose exec -T postgres_bcb psql -U bcb -d bcb < sql/create_economic_ind
 ```
 
 ## Executando a DAG
+Acessar o Airflow: [Link_Airflow](http://localhost:8081)
+```Usuário
+airflow
+```
+```Senha
+airflow
+```
 No Airflow, execute manualmente a DAG:
 ```text
 projeto-bcb
