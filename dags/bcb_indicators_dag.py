@@ -1,33 +1,52 @@
 from airflow.sdk import DAG
-from datetime import datetime
-from airflow.providers.standard.operators.python import PythonOperator
-from scripts.fetch_bcb import _json_downloader
-from scripts.transform_bcb import _json_to_csv
+from datetime import datetime, timedelta
+from airflow.providers.docker.operators.docker import DockerOperator
 
 
 with DAG(
     dag_id="projeto-bcb",
     start_date=datetime(2026,1,1),
     schedule='0 7 * * *',
-    catchup=False
+    catchup=False,
+    default_args={
+        "retries":2,
+        "retry_delay":timedelta(minutes=5)
+    }
 ):
-    fetch_bcb_series = PythonOperator(
+    fetch_bcb_series = DockerOperator(
         task_id="fetch_bcb_series",
-        python_callable=_json_downloader,
-        op_kwargs={
-            "url":"https://api.bcb.gov.br/dados/serie/bcdata.sgs.27790/dados?formato=json",
-            "output_path":"/tmp/data/raw/bcb/{{ ds }}.json"
-        }
-    )
-
-    transform_to_csv = PythonOperator(
-        task_id="transform_to_csv",
-        python_callable=_json_to_csv,
-        op_kwargs={
-            "input_path":"/tmp/data/raw/bcb/{{ ds }}.json",
-            "output_path":"/tmp/data/processed/bcb/{{ ds }}.csv"
-        }
+        image="bcb-pipeline:2.0",
+        command=[
+            'python', \
+            '-m', \
+            "scripts.fetch_bcb", \
+            "--series_path", "/opt/airflow/config_bcb/series.json", \
+            "--url", "https://api.bcb.gov.br/dados/serie/bcdata.sgs.", \
+            "--output_path", "/tmp/data/raw/bcb", \
+            "--end_date", "{{ ds }}"
+        ],
+        docker_url="unix://var/run/docker.sock",
+        network_mode="bridge",
+        auto_remove="success",
+        mount_tmp_dir=False,
     )
     
-    fetch_bcb_series >> transform_to_csv
+    load_postgres = DockerOperator(
+        task_id="load_postgres",
+        image="bcb-pipeline:2.0",
+        command=[
+            'python', \
+            '-m', \
+            "scripts.load_postgres", \
+            "--series_path", "/opt/airflow/config_bcb/series.json", \
+            "--input_path", "/tmp/data/raw/bcb", \
+            "--partition_date", "{{ ds }}"
+        ],
+        docker_url="unix://var/run/docker.sock",
+        network_mode="bridge",
+        auto_remove="success",
+        mount_tmp_dir=False,
+    )
+
+    fetch_bcb_series >> load_postgres
     
