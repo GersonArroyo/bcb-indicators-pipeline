@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 from decimal import Decimal
 import json
@@ -81,3 +82,17 @@ def load_bcb_to_postgres(series_path, input_path, partition_date):
     normalized_data = build_normalized_records(series_path, input_path, partition_date)
     save_records_to_postgres(normalized_data)
     
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--series_path", required=True)
+    parser.add_argument("--input_path", required=True)
+    parser.add_argument("--partition_date", required=True)
+
+    args = parser.parse_args()
+
+    load_bcb_to_postgres(
+        series_path=args.series_path,
+        input_path=args.input_path,
+        partition_date=args.partition_date
+    )
