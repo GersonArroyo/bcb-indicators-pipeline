@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import requests
 import json
 from pathlib import Path
+import argparse
 
 
 def to_bcb_date(ds):
@@ -71,3 +72,20 @@ def json_downloader(series_path, url, output_path, end_date):
         
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--series_path", required=True)
+    parser.add_argument("--url", required=True)
+    parser.add_argument("--output_path", required=True)
+    parser.add_argument("--end_date", required=True)
+
+    args = parser.parse_args()
+
+    json_downloader(
+        series_path=args.series_path,
+        url=args.url,
+        output_path=args.output_path,
+        end_date=args.end_date
+    )
