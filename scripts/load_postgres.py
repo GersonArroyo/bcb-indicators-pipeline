@@ -78,9 +78,57 @@ def save_records_to_postgres(normalized_data):
     conn.commit()
     
     
+def validate_persisted_records(expected_keys):
+    series_codes = {
+        series_code
+        for series_code, _ in expected_keys
+    }
+    
+    reference_dates = [
+        reference_date 
+        for _, reference_date in expected_keys
+    ]
+    
+    min_date = min(reference_dates)
+    max_date = max(reference_dates)
+    
+    with psycopg.connect(
+        host="postgres_bcb",
+        port=5432,
+        dbname="bcb",
+        user="bcb",
+        password="bcb"
+    ) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT series_code, reference_date
+                FROM bcb_indicators
+                WHERE series_code = ANY(%s)
+                AND reference_date BETWEEN %s AND %s;
+                """,
+                (list(series_codes), min_date, max_date)
+            )
+            persisted_keys = cursor.fetchall()
+            
+    missing_keys = expected_keys - set(persisted_keys)
+    
+    if missing_keys:
+        raise ValueError(f"Missing records in the database: {missing_keys}")
+    
+    
 def load_bcb_to_postgres(series_path, input_path, partition_date):
     normalized_data = build_normalized_records(series_path, input_path, partition_date)
+    
+    expected_keys = {
+        (register["series_code"], register["reference_date"]) 
+        for register in normalized_data
+    }
+    
     save_records_to_postgres(normalized_data)
+    
+    validate_persisted_records(expected_keys)
+    
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
