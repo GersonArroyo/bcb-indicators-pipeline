@@ -8,6 +8,8 @@ O foco do projeto é demonstrar um fluxo de engenharia de dados com:
 * PostgreSQL como banco de destino
 * pgAdmin para inspeção dos dados
 * carga idempotente com `UPSERT`
+* resiliência na extração HTTP com retry, backoff e timeouts
+* testes automatizados com pytest e CI via GitHub Actions
 
 Fonte dos dados:
 * [Data.gov.br - SGS/BCData](https://dados.gov.br/dados/conjuntos-dados/27790-sgs)
@@ -179,14 +181,48 @@ A pipeline foi construída para permitir reexecução segura.
 
 Se a task de carga for executada novamente para a mesma data, os registros não são duplicados. O PostgreSQL aplica a regra de unicidade por `series_code` e `reference_date`, e o comando `ON CONFLICT DO UPDATE` atualiza os registros existentes quando necessário.
 
-## Status do projeto
-MVP funcional:
+## Confiabilidade e tolerância a falhas
 
-* coleta dados da API SGS/BCB
-* salva JSON bruto
-* valida estrutura dos arquivos
-* normaliza datas e valores
-* carrega dados no PostgreSQL
-* evita duplicidade com UPSERT
-* executa as etapas em containers via DockerOperator
-* orquestra o fluxo com Apache Airflow
+A etapa de extração HTTP utiliza uma sessão `requests` configurada com política de retry para falhas transitórias.
+
+A implementação inclui:
+
+- retry para erros HTTP temporários
+- backoff entre novas tentativas
+- timeouts separados para conexão e leitura
+- propagação de exceções para que falhas sejam corretamente identificadas pelo Airflow
+
+A carga no PostgreSQL também é idempotente por meio de `UPSERT`, permitindo reexecuções seguras sem duplicação de registros.
+
+## Testes e CI
+Os testes automatizados são desenvolvidos com `pytest` e estão organizados na pasta `tests/`.
+
+A suíte cobre diferentes partes da pipeline, incluindo:
+
+- validação dos dados
+- comportamento da extração HTTP
+- política de retry
+- propagação de erros
+- persistência e validação dos registros no PostgreSQL
+
+O projeto também possui integração contínua com GitHub Actions.
+
+A suíte de testes é executada automaticamente em pull requests direcionadas para a branch `master`.
+
+## Status atual do projeto
+Atualmente, a pipeline possui:
+
+* coleta automatizada de séries da API SGS/BCB
+* armazenamento dos dados brutos em JSON
+* validação de estrutura e conteúdo dos arquivos
+* normalização de datas e valores
+* carga no PostgreSQL
+* carga idempotente com `UPSERT`
+* validação dos registros persistidos
+* retry com backoff para falhas HTTP transitórias
+* timeouts de conexão e leitura
+* propagação de erros para o Airflow
+* testes automatizados com `pytest`
+* integração contínua com GitHub Actions
+* execução das etapas em containers via `DockerOperator`
+* orquestração com Apache Airflow
