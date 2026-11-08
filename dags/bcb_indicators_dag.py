@@ -1,3 +1,5 @@
+import os
+
 from airflow.sdk import DAG
 from datetime import datetime, timedelta
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -55,7 +57,13 @@ with DAG(
         network_mode="bcb-indicators-pipeline_default",
         auto_remove="success",
         mount_tmp_dir=False,
-        mounts=[raw_data_mount]
+        mounts=[raw_data_mount],
+        environment={
+            "BCB_POSTGRES_HOST": os.environ["BCB_POSTGRES_HOST"],
+            "BCB_POSTGRES_USER": os.environ["BCB_POSTGRES_USER"],
+            "BCB_POSTGRES_PASSWORD": os.environ["BCB_POSTGRES_PASSWORD"],
+            "BCB_POSTGRES_DB": os.environ["BCB_POSTGRES_DB"],
+        }
     )
 
     fetch_bcb_series >> load_postgres

@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 from decimal import Decimal
 import json
+import os
 from pathlib import Path
 import psycopg
 from scripts.bcb_validators import (
@@ -48,15 +49,19 @@ def build_normalized_records(series_path, input_path, partition_date):
     return normalized_data
 
 
+def get_postgres_connection():
+    return psycopg.connect(
+        host=os.environ["BCB_POSTGRES_HOST"],
+        port=5432,
+        dbname=os.environ["BCB_POSTGRES_DB"],
+        user=os.environ["BCB_POSTGRES_USER"],
+        password=os.environ["BCB_POSTGRES_PASSWORD"],
+    )
+
+
 def save_records_to_postgres(normalized_data):
 
-    with psycopg.connect(
-        host="postgres_bcb",
-        port=5432,
-        dbname="bcb",
-        user="bcb",
-        password="bcb"
-    ) as conn:
+    with get_postgres_connection() as conn:
         with conn.cursor() as cursor:
             for register in normalized_data:
                 cursor.execute(
@@ -85,13 +90,7 @@ def validate_persisted_records(expected_keys):
     min_date = min(reference_dates)
     max_date = max(reference_dates)
 
-    with psycopg.connect(
-        host="postgres_bcb",
-        port=5432,
-        dbname="bcb",
-        user="bcb",
-        password="bcb"
-    ) as conn:
+    with get_postgres_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(
                 """
