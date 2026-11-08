@@ -1,5 +1,6 @@
 from datetime import date
 from unittest.mock import MagicMock, patch
+from scripts.load_postgres import get_postgres_connection
 
 import pytest
 
@@ -9,7 +10,11 @@ from scripts.load_postgres import (
 )
 
 
-def test_validate_persisted_records_with_all_records():
+def test_validate_persisted_records_with_all_records(monkeypatch):
+    monkeypatch.setenv("BCB_POSTGRES_HOST", "postgres_bcb")
+    monkeypatch.setenv("BCB_POSTGRES_DB", "bcb")
+    monkeypatch.setenv("BCB_POSTGRES_USER", "bcb")
+    monkeypatch.setenv("BCB_POSTGRES_PASSWORD", "bcb")
     expected_keys = {
         (432, date(2026, 10, 1)),
         (11, date(2026, 10, 1)),
@@ -29,7 +34,11 @@ def test_validate_persisted_records_with_all_records():
         validate_persisted_records(expected_keys)
 
 
-def test_validate_persisted_records_with_missing_record():
+def test_validate_persisted_records_with_missing_record(monkeypatch):
+    monkeypatch.setenv("BCB_POSTGRES_HOST", "postgres_bcb")
+    monkeypatch.setenv("BCB_POSTGRES_DB", "bcb")
+    monkeypatch.setenv("BCB_POSTGRES_USER", "bcb")
+    monkeypatch.setenv("BCB_POSTGRES_PASSWORD", "bcb")
     expected_keys = {
         (432, date(2026, 10, 1)),
         (11, date(2026, 10, 1)),
@@ -57,7 +66,11 @@ def test_validate_persisted_records_with_missing_record():
             validate_persisted_records(expected_keys)
 
 
-def test_save_records_to_postgres_propagates_database_error():
+def test_save_records_to_postgres_propagates_database_error(monkeypatch):
+    monkeypatch.setenv("BCB_POSTGRES_HOST", "postgres_bcb")
+    monkeypatch.setenv("BCB_POSTGRES_DB", "bcb")
+    monkeypatch.setenv("BCB_POSTGRES_USER", "bcb")
+    monkeypatch.setenv("BCB_POSTGRES_PASSWORD", "bcb")
     normalized_data = [
         {
             "series_code": 432,
@@ -80,3 +93,13 @@ def test_save_records_to_postgres_propagates_database_error():
     ):
         with pytest.raises(RuntimeError, match="database error"):
             save_records_to_postgres(normalized_data)
+
+
+def test_get_postgres_connection_fails_when_required_env_is_missing(monkeypatch):
+    monkeypatch.setenv("BCB_POSTGRES_HOST", "postgres_bcb")
+    monkeypatch.setenv("BCB_POSTGRES_DB", "bcb")
+    monkeypatch.setenv("BCB_POSTGRES_USER", "bcb")
+    monkeypatch.delenv("BCB_POSTGRES_PASSWORD", raising=False)
+
+    with pytest.raises(KeyError, match="BCB_POSTGRES_PASSWORD"):
+        get_postgres_connection()
