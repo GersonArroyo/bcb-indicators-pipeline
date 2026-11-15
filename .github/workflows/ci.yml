@@ -5,7 +5,7 @@ on:
     branches:
       - master
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,4 +21,11 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
 
       - name: Run tests
-        run: python -m pytest 
+        run: python -m pytest
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          tags: gerson/bcb-pipeline:2.0
