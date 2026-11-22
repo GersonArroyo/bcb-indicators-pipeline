@@ -23,6 +23,22 @@ jobs:
       - name: Run tests
         run: python -m pytest
 
+      - name: Install Airflow dependencies for DAG validation
+        run: |
+          python -m pip install \
+            "apache-airflow==3.2.2" \
+            apache-airflow-providers-docker
+
+      - name: Validate Airflow DAG imports
+        env:
+          BCB_POSTGRES_HOST: test
+          BCB_POSTGRES_USER: test
+          BCB_POSTGRES_PASSWORD: test
+          BCB_POSTGRES_DB: test
+          AIRFLOW__CORE__DAGS_FOLDER: ${{ github.workspace }}/dags
+        run: |
+          airflow dags list-import-errors --local --output=json \
+            | jq -e 'select(type=="array" and length == 0)'
       - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
