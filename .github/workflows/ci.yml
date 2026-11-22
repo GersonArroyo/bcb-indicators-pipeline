@@ -41,8 +41,20 @@ jobs:
           BCB_POSTGRES_DB: test
           AIRFLOW__CORE__DAGS_FOLDER: ${{ github.workspace }}/dags
         run: |
-          airflow dags list-import-errors --local --output=json \
-            | jq -e 'select(type=="array" and length == 0)'
+          python - <<'PY'
+          from airflow.dag_processing.dagbag import DagBag
+
+          dagbag = DagBag(include_examples=False)
+
+          if dagbag.import_errors:
+              for filename, error in dagbag.import_errors.items():
+                  print(f"{filename}:")
+                  print(error)
+              raise SystemExit(1)
+
+          print("All DAGs imported successfully.")
+          PY
+
       - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
