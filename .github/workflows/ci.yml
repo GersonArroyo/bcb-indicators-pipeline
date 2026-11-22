@@ -30,6 +30,9 @@ jobs:
             apache-airflow-providers-docker \
             graphviz
 
+      - name: Initialize Airflow metadata database
+        run: airflow db migrate
+
       - name: Validate Airflow DAG imports
         env:
           BCB_POSTGRES_HOST: test
